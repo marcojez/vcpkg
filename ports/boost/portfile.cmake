@@ -25,6 +25,10 @@ set(DIFF2 ${CURRENT_BUILDTREES_DIR}/src/boost-range-has_range_iterator-hotfix_e7
 FILE(WRITE ${DIFF2} "${content}")
 vcpkg_apply_patches(SOURCE_PATH ${SOURCE_PATH} PATCHES ${DIFF2})
 
+# apply boost::optional serialization hotfix
+vcpkg_apply_patches(SOURCE_PATH ${SOURCE_PATH} PATCHES "${CMAKE_CURRENT_LIST_DIR}/patch-serialization-1_65_0_b1-include.diff")
+vcpkg_apply_patches(SOURCE_PATH ${SOURCE_PATH} PATCHES "${CMAKE_CURRENT_LIST_DIR}/patch-serialization-1_65_0_b1-src.diff")
+
 ######################
 # Cleanup previous builds
 ######################
