@@ -503,14 +503,14 @@ target_include_directories(chaiscript ${} INTERFACE
 install(TARGETS chaiscript EXPORT chaiscript)
 
 # MJ: copy over package config script
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/chaiscript_config.cmake.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/chaiscript_config.cmake"
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/chaiscript-config.cmake.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/chaiscript-config.cmake"
   @ONLY
 )
 
 # MJ: install package config script and exports
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/chaiscript_config.cmake" DESTINATION share/chaiscript/cmake)
-install(EXPORT chaiscript NAMESPACE chaiscript:: DESTINATION share/chaiscript/cmake)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/chaiscript-config.cmake" DESTINATION lib/cmake/chaiscript)
+install(EXPORT chaiscript NAMESPACE chaiscript:: DESTINATION lib/cmake/chaiscript FILE chaiscript-targets.cmake)
    
 ENDIF()
 

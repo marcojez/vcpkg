@@ -18,7 +18,7 @@ vcpkg_from_github(
 )
 
 file(COPY "${CMAKE_CURRENT_LIST_DIR}/CMakeLists.txt" DESTINATION "${SOURCE_PATH}")
-file(COPY "${CMAKE_CURRENT_LIST_DIR}/chaiscript_config.cmake.in" DESTINATION "${SOURCE_PATH}")
+file(COPY "${CMAKE_CURRENT_LIST_DIR}/chaiscript-config.cmake.in" DESTINATION "${SOURCE_PATH}")
 
 vcpkg_configure_cmake(
     SOURCE_PATH ${SOURCE_PATH}
@@ -33,14 +33,15 @@ vcpkg_configure_cmake(
 
 vcpkg_install_cmake()
 
-#vcpkg_fixup_cmake_targets(CONFIG_PATH "share/chaiscript/cmake")
-
-file(MAKE_DIRECTORY "${CURRENT_PACKAGES_DIR}/tools")
-file(MAKE_DIRECTORY "${CURRENT_PACKAGES_DIR}/debug/tools")
+file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/share/chaiscript")
+file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/share/chaiscript")
 file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include")
-file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/share")
-file(RENAME "${CURRENT_PACKAGES_DIR}/bin/chai.exe" "${CURRENT_PACKAGES_DIR}/tools/chai.exe")
-file(RENAME "${CURRENT_PACKAGES_DIR}/debug/bin/chai.exe" "${CURRENT_PACKAGES_DIR}/debug/tools/chai.exe")
+file(MAKE_DIRECTORY "${CURRENT_PACKAGES_DIR}/tools/chaiscript")
+file(MAKE_DIRECTORY "${CURRENT_PACKAGES_DIR}/debug/tools/chaiscript")
+file(RENAME "${CURRENT_PACKAGES_DIR}/bin/chai.exe" "${CURRENT_PACKAGES_DIR}/tools/chaiscript/chai.exe")
+file(RENAME "${CURRENT_PACKAGES_DIR}/debug/bin/chai.exe" "${CURRENT_PACKAGES_DIR}/debug/tools/chaiscript/chai.exe")
+
+vcpkg_fixup_cmake_targets(CONFIG_PATH lib/cmake/chaiscript)
 
 vcpkg_copy_pdbs()
 
