@@ -8,11 +8,14 @@ namespace vcpkg::Commands::Edit
 {
     void perform_and_exit(const VcpkgCmdArguments& args, const VcpkgPaths& paths)
     {
+        static const std::string OPTION_BUILDTREES = "--buildtrees";
+
         auto& fs = paths.get_filesystem();
 
         static const std::string example = Commands::Help::create_example_string("edit zlib");
         args.check_exact_arg_count(1, example);
-        args.check_and_get_optional_command_arguments({});
+        const std::unordered_set<std::string> options =
+            args.check_and_get_optional_command_arguments({OPTION_BUILDTREES});
         const std::string port_name = args.command_arguments.at(0);
 
         const fs::path portpath = paths.ports / port_name;
@@ -27,6 +30,15 @@ namespace vcpkg::Commands::Edit
             if (auto e = env_EDITOR_optional.get())
             {
                 env_EDITOR = *e;
+            }
+        }
+
+        if (env_EDITOR.empty())
+        {
+            const fs::path CODE_EXE_PATH = System::get_ProgramFiles_platform_bitness() / "Microsoft VS Code/Code.exe";
+            if (fs.exists(CODE_EXE_PATH))
+            {
+                env_EDITOR = CODE_EXE_PATH;
             }
         }
 
@@ -73,6 +85,14 @@ namespace vcpkg::Commands::Edit
         {
             Checks::exit_with_message(
                 VCPKG_LINE_INFO, "Visual Studio Code was not found and the environment variable EDITOR is not set");
+        }
+
+        if (options.find(OPTION_BUILDTREES) != options.cend())
+        {
+            const auto buildtrees_current_dir = paths.buildtrees / port_name;
+
+            std::wstring cmdLine = Strings::wformat(LR"("%s" "%s" -n)", env_EDITOR, buildtrees_current_dir.native());
+            Checks::exit_with_code(VCPKG_LINE_INFO, System::cmd_execute(cmdLine));
         }
 
         std::wstring cmdLine = Strings::wformat(
