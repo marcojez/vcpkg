@@ -37,39 +37,20 @@ namespace vcpkg::Build
         Checks::exit_with_message(VCPKG_LINE_INFO, "Unsupported vcvarsall target %s", cmake_system_name);
     }
 
-    CWStringView to_vcvarsall_toolchain(const std::string& target_architecture)
+    CWStringView to_vcvarsall_toolchain(const std::string& target_architecture, const Toolset& toolset)
     {
-        using CPU = System::CPUArchitecture;
+        auto maybe_target_arch = System::to_cpu_architecture(target_architecture);
+        Checks::check_exit(
+            VCPKG_LINE_INFO, maybe_target_arch.has_value(), "Invalid architecture string: %s", target_architecture);
+        auto target_arch = maybe_target_arch.value_or_exit(VCPKG_LINE_INFO);
+        auto host_architectures = System::get_supported_host_architectures();
 
-        struct ArchOption
+        for (auto&& host : host_architectures)
         {
-            CWStringView name;
-            CPU host_arch;
-            CPU target_arch;
-        };
-
-        static constexpr ArchOption X86 = {L"x86", CPU::X86, CPU::X86};
-        static constexpr ArchOption X86_X64 = {L"x86_x64", CPU::X86, CPU::X64};
-        static constexpr ArchOption X86_ARM = {L"x86_arm", CPU::X86, CPU::ARM};
-        static constexpr ArchOption X86_ARM64 = {L"x86_arm64", CPU::X86, CPU::ARM64};
-
-        static constexpr ArchOption X64 = {L"amd64", CPU::X64, CPU::X64};
-        static constexpr ArchOption X64_X86 = {L"amd64_x86", CPU::X64, CPU::X86};
-        static constexpr ArchOption X64_ARM = {L"amd64_arm", CPU::X64, CPU::ARM};
-        static constexpr ArchOption X64_ARM64 = {L"amd64_arm64", CPU::X64, CPU::ARM64};
-
-        static constexpr std::array<ArchOption, 8> VALUES = {
-            X86, X86_X64, X86_ARM, X86_ARM64, X64, X64_X86, X64_ARM, X64_ARM64};
-
-        auto target_arch = System::to_cpu_architecture(target_architecture);
-        auto host_arch = System::get_host_processor();
-
-        for (auto&& value : VALUES)
-        {
-            if (target_arch == value.target_arch && host_arch == value.host_arch)
-            {
-                return value.name;
-            }
+            auto it = Util::find_if(toolset.supported_architectures, [&](const ToolsetArchOption& opt) {
+                return host == opt.host_arch && target_arch == opt.target_arch;
+            });
+            if (it != toolset.supported_architectures.end()) return it->name;
         }
 
         Checks::exit_with_message(VCPKG_LINE_INFO, "Unsupported toolchain combination %s", target_architecture);
@@ -83,7 +64,7 @@ namespace vcpkg::Build
             tonull = L"";
         }
 
-        auto arch = to_vcvarsall_toolchain(pre_build_info.target_architecture);
+        auto arch = to_vcvarsall_toolchain(pre_build_info.target_architecture, toolset);
         auto target = to_vcvarsall_target(pre_build_info.cmake_system_name);
 
         return Strings::wformat(LR"("%s" %s %s %s 2>&1)", toolset.vcvarsall.native(), arch, target, tonull);
@@ -193,13 +174,16 @@ namespace vcpkg::Build
         int return_code = System::cmd_execute_clean(command);
         auto buildtimeus = timer.microseconds();
         const auto spec_string = spec.to_string();
-        Metrics::track_metric("buildtimeus-" + spec_string, buildtimeus);
 
-        if (return_code != 0)
         {
-            Metrics::track_property("error", "build failed");
-            Metrics::track_property("build_error", spec_string);
-            return {BuildResult::BUILD_FAILED, {}};
+            auto locked_metrics = Metrics::g_metrics.lock();
+            locked_metrics->track_metric("buildtimeus-" + spec_string, buildtimeus);
+            if (return_code != 0)
+            {
+                locked_metrics->track_property("error", "build failed");
+                locked_metrics->track_property("build_error", spec_string);
+                return {BuildResult::BUILD_FAILED, {}};
+            }
         }
 
         auto build_info = read_build_info(paths.get_filesystem(), paths.build_info_file_path(spec));
