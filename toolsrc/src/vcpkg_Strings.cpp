@@ -130,7 +130,7 @@ namespace vcpkg::Strings
             trim(&s);
         }
 
-        Util::erase_remove_if(*strings, [](const std::string& s) { return s == ""; });
+        Util::erase_remove_if(*strings, [](const std::string& s) { return s.empty(); });
     }
 
     std::vector<std::string> split(const std::string& s, const std::string& delimiter)

@@ -23,7 +23,7 @@ namespace vcpkg::System
 
     ExitCodeAndOutput cmd_execute_and_capture_output(const CWStringView cmd_line);
 
-    std::wstring create_powershell_script_cmd(const fs::path& script_path, const CWStringView args = L"");
+    std::wstring create_powershell_script_cmd(const fs::path& script_path, const CWStringView args = Strings::WEMPTY);
 
     enum class Color
     {
@@ -32,6 +32,7 @@ namespace vcpkg::System
         warning = 14,
     };
 
+    void println();
     void print(const CStringView message);
     void println(const CStringView message);
     void print(const Color c, const CStringView message);
