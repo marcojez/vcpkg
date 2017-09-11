@@ -137,7 +137,7 @@ namespace vcpkg
         auto control_file = std::make_unique<SourceControlFile>();
 
         auto maybe_source = parse_source_paragraph(std::move(control_paragraphs.front()));
-        if (auto source = maybe_source.get())
+        if (const auto source = maybe_source.get())
             control_file->core_paragraph = std::move(*source);
         else
             return std::move(maybe_source).error();
@@ -147,7 +147,7 @@ namespace vcpkg
         for (auto&& feature_pgh : control_paragraphs)
         {
             auto maybe_feature = parse_feature_paragraph(std::move(feature_pgh));
-            if (auto feature = maybe_feature.get())
+            if (const auto feature = maybe_feature.get())
                 control_file->feature_paragraphs.emplace_back(std::move(*feature));
             else
                 return std::move(maybe_feature).error();
@@ -170,17 +170,10 @@ namespace vcpkg
 
     std::string Dependency::name() const
     {
-        std::string str = this->depend.name;
-        if (this->depend.features.empty()) return str;
+        if (this->depend.features.empty()) return this->depend.name;
 
-        str += "[";
-        for (auto&& s : this->depend.features)
-        {
-            str += s + ",";
-        }
-        str.pop_back();
-        str += "]";
-        return str;
+        const std::string features = Strings::join(",", this->depend.features);
+        return Strings::format("%s[%s]", this->depend.name, features);
     }
 
     std::vector<Dependency> vcpkg::expand_qualified_dependencies(const std::vector<std::string>& depends)
@@ -220,11 +213,7 @@ namespace vcpkg
         return FeatureSpec::from_strings_and_triplet(filter_dependencies(deps, t), t);
     }
 
-    const std::string to_string(const Dependency& dep)
-    {
-        std::string name = dep.name();
-        return name;
-    }
+    std::string to_string(const Dependency& dep) { return dep.name(); }
 
     ExpectedT<Supports, std::vector<std::string>> Supports::parse(const std::vector<std::string>& strs)
     {
@@ -263,7 +252,7 @@ namespace vcpkg
 
     bool Supports::is_supported(Architecture arch, Platform plat, Linkage crt, ToolsetVersion tools)
     {
-        auto is_in_or_empty = [](auto v, auto&& c) -> bool { return c.empty() || c.end() != Util::find(c, v); };
+        const auto is_in_or_empty = [](auto v, auto&& c) -> bool { return c.empty() || c.end() != Util::find(c, v); };
         if (!is_in_or_empty(arch, architectures)) return false;
         if (!is_in_or_empty(plat, platforms)) return false;
         if (!is_in_or_empty(crt, crt_linkages)) return false;

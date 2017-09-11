@@ -176,6 +176,17 @@ namespace vcpkg::System
         return exit_code;
     }
 
+    // On Win7, output from powershell calls contain a byte order mark, so we strip it out if it is present
+    static void remove_byte_order_mark(std::wstring* s)
+    {
+        const wchar_t* a = s->c_str();
+        // This is the UTF-8 byte-order mark
+        if (a[0] == 0xEF && a[1] == 0xBB && a[2] == 0xBF)
+        {
+            s->erase(0, 3);
+        }
+    }
+
     ExitCodeAndOutput cmd_execute_and_capture_output(const CWStringView cmd_line)
     {
         // Flush stdout before launching external process
@@ -202,6 +213,7 @@ namespace vcpkg::System
 
         const auto ec = _pclose(pipe);
         Debug::println("_pclose() returned %d", ec);
+        remove_byte_order_mark(&output);
         return {ec, Strings::to_utf8(output)};
     }
 
@@ -283,36 +295,36 @@ namespace vcpkg::System
         return ret;
     }
 
-    static const fs::path& get_ProgramFiles()
+    static const fs::path& get_program_files()
     {
-        static const fs::path p = System::get_environment_variable(L"PROGRAMFILES").value_or_exit(VCPKG_LINE_INFO);
-        return p;
+        static const fs::path PATH = System::get_environment_variable(L"PROGRAMFILES").value_or_exit(VCPKG_LINE_INFO);
+        return PATH;
     }
 
-    const fs::path& get_ProgramFiles_32_bit()
+    const fs::path& get_program_files_32_bit()
     {
-        static const fs::path p = []() -> fs::path {
+        static const fs::path PATH = []() -> fs::path {
             auto value = System::get_environment_variable(L"ProgramFiles(x86)");
             if (auto v = value.get())
             {
                 return std::move(*v);
             }
-            return get_ProgramFiles();
+            return get_program_files();
         }();
-        return p;
+        return PATH;
     }
 
-    const fs::path& get_ProgramFiles_platform_bitness()
+    const fs::path& get_program_files_platform_bitness()
     {
-        static const fs::path p = []() -> fs::path {
+        static const fs::path PATH = []() -> fs::path {
             auto value = System::get_environment_variable(L"ProgramW6432");
             if (auto v = value.get())
             {
                 return std::move(*v);
             }
-            return get_ProgramFiles();
+            return get_program_files();
         }();
-        return p;
+        return PATH;
     }
 }
 
