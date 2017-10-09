@@ -38,7 +38,7 @@ namespace vcpkg::PostBuildLint
         }
     };
 
-    const std::vector<OutdatedDynamicCrt>& get_outdated_dynamic_crts()
+    Span<const OutdatedDynamicCrt> get_outdated_dynamic_crts(CStringView toolset)
     {
         static const std::vector<OutdatedDynamicCrt> V_NO_MSVCRT = {
             {"msvcp100.dll", R"(msvcp100\.dll)"},
@@ -662,7 +662,7 @@ namespace vcpkg::PostBuildLint
                                "Running command:\n   %s\n failed",
                                Strings::to_utf8(cmd_line));
 
-            for (const OutdatedDynamicCrt& outdated_crt : get_outdated_dynamic_crts())
+            for (const OutdatedDynamicCrt& outdated_crt : get_outdated_dynamic_crts("v141"))
             {
                 if (std::regex_search(ec_data.output.cbegin(), ec_data.output.cend(), outdated_crt.regex))
                 {
@@ -722,7 +722,7 @@ namespace vcpkg::PostBuildLint
         const auto& fs = paths.get_filesystem();
 
         // for dumpbin
-        const Toolset& toolset = paths.get_toolset(pre_build_info.platform_toolset);
+        const Toolset& toolset = paths.get_toolset(pre_build_info.platform_toolset, pre_build_info.visual_studio_path);
         const fs::path package_dir = paths.package_dir(spec);
 
         size_t error_count = 0;

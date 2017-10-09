@@ -67,7 +67,12 @@ namespace vcpkg::Build
         const auto arch = to_vcvarsall_toolchain(pre_build_info.target_architecture, toolset);
         const auto target = to_vcvarsall_target(pre_build_info.cmake_system_name);
 
-        return Strings::wformat(LR"("%s" %s %s %s 2>&1)", toolset.vcvarsall.native(), arch, target, tonull);
+        return Strings::wformat(LR"("%s" %s %s %s %s 2>&1)",
+                                toolset.vcvarsall.native(),
+                                Strings::join(L" ", toolset.vcvarsall_options),
+                                arch,
+                                target,
+                                tonull);
     }
 
     static void create_binary_feature_control_file(const SourceParagraph& source_paragraph,
@@ -133,7 +138,7 @@ namespace vcpkg::Build
 
         const fs::path ports_cmake_script_path = paths.ports_cmake;
         const auto pre_build_info = PreBuildInfo::from_triplet_file(paths, triplet);
-        const Toolset& toolset = paths.get_toolset(pre_build_info.platform_toolset);
+        const Toolset& toolset = paths.get_toolset(pre_build_info.platform_toolset, pre_build_info.visual_studio_path);
         const auto cmd_set_environment = make_build_env_cmd(pre_build_info, toolset);
 
         std::string features;
@@ -160,7 +165,7 @@ namespace vcpkg::Build
                 {L"PORT", config.src.name},
                 {L"CURRENT_PORT_DIR", config.port_dir / "/."},
                 {L"TARGET_TRIPLET", triplet.canonical_name()},
-                {L"VCPKG_PLATFORM_TOOLSET", toolset.version},
+                {L"VCPKG_PLATFORM_TOOLSET", toolset.version.c_str()},
                 {L"VCPKG_USE_HEAD_VERSION", to_bool(config.build_package_options.use_head_version) ? L"1" : L"0"},
                 {L"_VCPKG_NO_DOWNLOADS", !to_bool(config.build_package_options.allow_downloads) ? L"1" : L"0"},
                 {L"GIT", git_exe_path},
@@ -381,7 +386,15 @@ namespace vcpkg::Build
 
             if (variable_name == "VCPKG_PLATFORM_TOOLSET")
             {
-                pre_build_info.platform_toolset = variable_value;
+                pre_build_info.platform_toolset =
+                    variable_value.empty() ? nullopt : Optional<std::string>{variable_value};
+                continue;
+            }
+
+            if (variable_name == "VCPKG_VISUAL_STUDIO_PATH")
+            {
+                pre_build_info.visual_studio_path =
+                    variable_value.empty() ? nullopt : Optional<fs::path>{variable_value};
                 continue;
             }
 

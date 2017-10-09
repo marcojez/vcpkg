@@ -116,11 +116,21 @@ function SelectProgram([Parameter(Mandatory=$true)][string]$Dependency)
     }
     elseif($Dependency -eq "nuget")
     {
-        $requiredVersion = "4.1.0"
-        $downloadVersion = "4.1.0"
-        $url = "https://dist.nuget.org/win-x86-commandline/v4.1.0/nuget.exe"
-        $downloadPath = "$downloadsDir\nuget-4.1.0\nuget.exe"
-        $expectedDownloadedFileHash = "4c1de9b026e0c4ab087302ff75240885742c0faa62bd2554f913bbe1f6cb63a0"
+        $requiredVersion = "4.3.0"
+        $downloadVersion = "4.3.0"
+        $url = "https://dist.nuget.org/win-x86-commandline/v4.3.0/nuget.exe"
+        $downloadPath = "$downloadsDir\nuget-$downloadVersion\nuget.exe"
+        $expectedDownloadedFileHash = "386da77a8cf2b63d1260b7020feeedabfe3b65ab31d20e6a313a530865972f3a"
+        $executableFromDownload = $downloadPath
+        $extractionType = $ExtractionType_NO_EXTRACTION_REQUIRED
+    }
+    elseif($Dependency -eq "vswhere")
+    {
+        $requiredVersion = "2.1.4"
+        $downloadVersion = "2.1.4"
+        $url = "https://github.com/Microsoft/vswhere/releases/download/2.1.4/vswhere.exe"
+        $downloadPath = "$downloadsDir\vswhere-$downloadVersion\vswhere.exe"
+        $expectedDownloadedFileHash = "548fb9dfeed59bc4ddcce739a5729e9c8dd5932cd60ff6f74727ee069e7da458"
         $executableFromDownload = $downloadPath
         $extractionType = $ExtractionType_NO_EXTRACTION_REQUIRED
     }
@@ -136,6 +146,17 @@ function SelectProgram([Parameter(Mandatory=$true)][string]$Dependency)
         $executableFromDownload = "$downloadsDir\MinGit-2.14.1-32-bit\cmd\git.exe"
         $extractionType = $ExtractionType_ZIP
         $extractionFolder = "$downloadsDir\MinGit-2.14.1-32-bit"
+    }
+    elseif($Dependency -eq "installerbase")
+    {
+        $requiredVersion = "3.1.81"
+        $downloadVersion = "3.1.81"
+        $url = "https://github.com/podsvirov/installer-framework/releases/download/cr203958-9/QtInstallerFramework-win-x86.zip"
+        $downloadPath = "$downloadsDir\QtInstallerFramework-win-x86.zip"
+        $expectedDownloadedFileHash = "f2ce23cf5cf9fc7ce409bdca49328e09a070c0026d3c8a04e4dfde7b05b83fe8"
+        $executableFromDownload = "$downloadsDir\QtInstallerFramework-win-x86\bin\installerbase.exe"
+        $extractionType = $ExtractionType_ZIP
+        $extractionFolder = $downloadsDir
     }
     else
     {

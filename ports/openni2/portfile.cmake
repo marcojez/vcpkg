@@ -36,10 +36,14 @@ vcpkg_download_distfile(ARCHIVE
 )
 vcpkg_extract_source_archive(${ARCHIVE})
 
+file(TO_NATIVE_PATH ${VCPKG_ROOT_DIR} NATIVE_VCPKG_ROOT_DIR)
+configure_file("${CMAKE_CURRENT_LIST_DIR}/replace_environment_variable.patch.in" "${CMAKE_CURRENT_LIST_DIR}/replace_environment_variable.patch" @ONLY)
+
 vcpkg_apply_patches(
     SOURCE_PATH ${SOURCE_PATH}
     PATCHES "${CMAKE_CURRENT_LIST_DIR}/upgrade_projects.patch"
-    PATCHES "${CMAKE_CURRENT_LIST_DIR}/disable_kinect.patch"
+            "${CMAKE_CURRENT_LIST_DIR}/inherit_from_parent_or_project_defaults.patch"
+            "${CMAKE_CURRENT_LIST_DIR}/replace_environment_variable.patch"
 )
 
 # Build OpenNI2
@@ -137,6 +141,7 @@ file(
 
 file(
     INSTALL
+        "${SOURCE_BIN_PATH_RELEASE}/OpenNI2/Drivers/Kinect.dll"
         "${SOURCE_BIN_PATH_RELEASE}/OpenNI2/Drivers/OniFile.dll"
         "${SOURCE_BIN_PATH_RELEASE}/OpenNI2/Drivers/PS1080.dll"
         "${SOURCE_CONFIG_PATH}/OpenNI2/Drivers/PS1080.ini"
@@ -156,6 +161,7 @@ file(
 
 file(
     INSTALL
+        "${SOURCE_BIN_PATH_DEBUG}/OpenNI2/Drivers/Kinect.dll"
         "${SOURCE_BIN_PATH_DEBUG}/OpenNI2/Drivers/OniFile.dll"
         "${SOURCE_BIN_PATH_DEBUG}/OpenNI2/Drivers/PS1080.dll"
         "${SOURCE_CONFIG_PATH}/OpenNI2/Drivers/PS1080.ini"
@@ -175,6 +181,7 @@ file(
 
 file(
     INSTALL
+        "${SOURCE_BIN_PATH_RELEASE}/OpenNI2/Drivers/Kinect.dll"
         "${SOURCE_BIN_PATH_RELEASE}/OpenNI2/Drivers/OniFile.dll"
         "${SOURCE_BIN_PATH_RELEASE}/OpenNI2/Drivers/PS1080.dll"
         "${SOURCE_CONFIG_PATH}/OpenNI2/Drivers/PS1080.ini"
@@ -199,7 +206,7 @@ file(
         "${SOURCE_BIN_PATH_RELEASE}/PS1080Console.exe"
         "${SOURCE_BIN_PATH_RELEASE}/PSLinkConsole.exe"
     DESTINATION
-        ${CURRENT_PACKAGES_DIR}/tools/openni2/
+        ${CURRENT_PACKAGES_DIR}/tools/openni2
 )
 
 # Handle copyright
