@@ -35,6 +35,9 @@ Specifies the C/C++ compiler toolchain to use.
 
 This can be set to `v141`, `v140`, or left blank. If left blank, we select the latest compiler toolset available on your machine.
 
+Visual Studio 2015 platform toolset is `v140`  
+Visual Studio 2017 platform toolset is `v141`
+
 ## Per-port customization
 The CMake Macro `PORT` will be set when interpreting the triplet file and can be used to change settings (such as `VCPKG_LIBRARY_LINKAGE`) on a per-port basis.
 
@@ -42,11 +45,11 @@ Example:
 ```cmake
 set(VCPKG_LIBRARY_LINKAGE static)
 set(VCPKG_CRT_LINKAGE dynamic)
-if(PORT STREQUAL "qt5")
+if(PORT MATCHES "qt5-")
     set(VCPKG_LIBRARY_LINKAGE dynamic)
 endif()
 ```
-This will build `qt5` as DLLs against the dynamic CRT, but every other library as a static library (still against the dynamic CRT).
+This will build all the `qt5-*` libraries as DLLs against the dynamic CRT, but every other library as a static library (still against the dynamic CRT).
 
 For an example in a real project, see https://github.com/Intelight/vcpkg/blob/master/triplets/x86-windows-mixed.cmake.
 

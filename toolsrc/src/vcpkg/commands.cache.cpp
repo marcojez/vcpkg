@@ -38,7 +38,7 @@ namespace vcpkg::Commands::Cache
 
     void perform_and_exit(const VcpkgCmdArguments& args, const VcpkgPaths& paths)
     {
-        args.parse_arguments(COMMAND_STRUCTURE);
+        Util::unused(args.parse_arguments(COMMAND_STRUCTURE));
 
         const std::vector<BinaryParagraph> binary_paragraphs = read_all_binary_paragraphs(paths);
         if (binary_paragraphs.empty())
@@ -47,7 +47,7 @@ namespace vcpkg::Commands::Cache
             Checks::exit_success(VCPKG_LINE_INFO);
         }
 
-        if (args.command_arguments.size() == 0)
+        if (args.command_arguments.empty())
         {
             for (const BinaryParagraph& binary_paragraph : binary_paragraphs)
             {

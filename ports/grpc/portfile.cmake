@@ -12,8 +12,8 @@ endif()
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO grpc/grpc
-    REF v1.7.2
-    SHA512 54cb4165878fb3361cd7a81b631f1b20e991eadd286c0f6020542a8aa464cf30bdd1479dc413b767a1585bdc730e465a64c45e9e805723f38bd54521e1c4f942
+    REF v1.10.1
+    SHA512 2221d902c60eada6dd1547a63d26bd3b30cb6710247b5e48523bacde498a3691cc177f1dbe9db8a007b8ae341a5b0c8ec999539e26a9bcff480a8d0b02140997
     HEAD_REF master
 )
 
@@ -22,6 +22,7 @@ vcpkg_apply_patches(
     SOURCE_PATH ${SOURCE_PATH}
     PATCHES
         ${CMAKE_CURRENT_LIST_DIR}/disable-csharp-ext.patch
+        ${CMAKE_CURRENT_LIST_DIR}/disable-csharp-ext-2.patch
 )
 
 if(VCPKG_CRT_LINKAGE STREQUAL static)
@@ -66,8 +67,12 @@ if(TOOLS)
     vcpkg_copy_tool_dependencies(${CURRENT_PACKAGES_DIR}/tools/grpc)
 endif()
 
-file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/bin)
-file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/debug/bin)
+if(NOT VCPKG_CMAKE_SYSTEM_NAME OR VCPKG_CMAKE_SYSTEM_NAME STREQUAL "WindowsStore")
+    file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/bin)
+    file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/debug/bin)
+else()
+    SET(VCPKG_POLICY_EMPTY_PACKAGE enabled) # Leave the executable files in bin/ and debug/bin
+endif()
 file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/debug/include)
 
 vcpkg_copy_pdbs()

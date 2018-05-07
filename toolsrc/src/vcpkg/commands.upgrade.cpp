@@ -15,10 +15,10 @@ namespace vcpkg::Commands::Upgrade
     using Install::KeepGoing;
     using Install::to_keep_going;
 
-    static const std::string OPTION_NO_DRY_RUN = "--no-dry-run";
-    static const std::string OPTION_KEEP_GOING = "--keep-going";
+    static constexpr StringLiteral OPTION_NO_DRY_RUN = "--no-dry-run";
+    static constexpr StringLiteral OPTION_KEEP_GOING = "--keep-going";
 
-    static const std::array<CommandSwitch, 2> INSTALL_SWITCHES = {{
+    static constexpr std::array<CommandSwitch, 2> INSTALL_SWITCHES = {{
         {OPTION_NO_DRY_RUN, "Actually upgrade"},
         {OPTION_KEEP_GOING, "Continue installing packages on failure"},
     }};
@@ -141,11 +141,11 @@ namespace vcpkg::Commands::Upgrade
 
         Checks::check_exit(VCPKG_LINE_INFO, !plan.empty());
 
-        const Build::BuildPackageOptions install_plan_options = {
-            Build::UseHeadVersion::NO,
-            Build::AllowDownloads::YES,
-            Build::CleanBuildtrees::NO,
-        };
+        const Build::BuildPackageOptions install_plan_options = {Build::UseHeadVersion::NO,
+                                                                 Build::AllowDownloads::YES,
+                                                                 Build::CleanBuildtrees::NO,
+                                                                 Build::CleanPackages::NO,
+                                                                 Build::DownloadTool::BUILT_IN};
 
         // Set build settings for all install actions
         for (auto&& action : plan)

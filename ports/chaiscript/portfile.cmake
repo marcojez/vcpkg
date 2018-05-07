@@ -1,4 +1,4 @@
-﻿SET(VCPKG_POLICY_DLLS_WITHOUT_LIBS enabled)
+SET(VCPKG_POLICY_DLLS_WITHOUT_LIBS enabled)
 
 if (VCPKG_LIBRARY_LINKAGE STREQUAL static)
     message(STATUS "Warning: Static building not supported yet. Building dynamic.")

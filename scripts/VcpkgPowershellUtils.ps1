@@ -3,6 +3,16 @@ function vcpkgHasModule([Parameter(Mandatory=$true)][string]$moduleName)
     return [bool](Get-Module -ListAvailable -Name $moduleName)
 }
 
+function vcpkgHasProperty([Parameter(Mandatory=$true)][AllowNull()]$object, [Parameter(Mandatory=$true)]$propertyName)
+{
+    if ($object -eq $null)
+    {
+        return $false
+    }
+
+    return [bool]($object.psobject.Properties | where { $_.Name -eq "$propertyName"})
+}
+
 function vcpkgCreateDirectoryIfNotExists([Parameter(Mandatory=$true)][string]$dirPath)
 {
     if (!(Test-Path $dirPath))
@@ -25,11 +35,29 @@ function vcpkgCreateParentDirectoryIfNotExists([Parameter(Mandatory=$true)][stri
     }
 }
 
-function vcpkgRemoveItem([Parameter(Mandatory=$true)][string]$dirPath)
+function vcpkgIsDirectory([Parameter(Mandatory=$true)][string]$path)
 {
-    if (Test-Path $dirPath)
+    return (Get-Item $path) -is [System.IO.DirectoryInfo]
+}
+
+function vcpkgRemoveItem([Parameter(Mandatory=$true)][string]$path)
+{
+    if ([string]::IsNullOrEmpty($path))
     {
-        Remove-Item $dirPath -Recurse -Force
+        return
+    }
+
+    if (Test-Path $path)
+    {
+        # Remove-Item -Recurse occasionally fails. This is a workaround
+        if (vcpkgIsDirectory $path)
+        {
+            & cmd.exe /c rd /s /q $path
+        }
+        else
+        {
+            Remove-Item $path -Force
+        }
     }
 }
 
@@ -56,22 +84,28 @@ function vcpkgGetCredentials()
     }
 }
 
-function vcpkgGetSHA256([Parameter(Mandatory=$true)][string]$filePath)
+function vcpkgGetSHA512([Parameter(Mandatory=$true)][string]$filePath)
 {
     if (vcpkgHasCommand -commandName 'Microsoft.PowerShell.Utility\Get-FileHash')
     {
         Write-Verbose("Hashing with Microsoft.PowerShell.Utility\Get-FileHash")
-        $hash = (Microsoft.PowerShell.Utility\Get-FileHash -Path $filePath -Algorithm SHA256).Hash
+        $hashresult = Microsoft.PowerShell.Utility\Get-FileHash -Path $filePath -Algorithm SHA512 -ErrorVariable hashError
+        if ($hashError)
+        {
+            Start-Sleep 3
+            $hashresult = Microsoft.PowerShell.Utility\Get-FileHash -Path $filePath -Algorithm SHA512 -ErrorVariable Stop
+        }
+        $hash = $hashresult.Hash
     }
     elseif(vcpkgHasCommand -commandName 'Pscx\Get-Hash')
     {
         Write-Verbose("Hashing with Pscx\Get-Hash")
-        $hash = (Pscx\Get-Hash -Path $filePath -Algorithm SHA256).HashString
+        $hash = (Pscx\Get-Hash -Path $filePath -Algorithm SHA512).HashString
     }
     else
     {
         Write-Verbose("Hashing with .NET")
-        $hashAlgorithm = [Security.Cryptography.HashAlgorithm]::Create("SHA256")
+        $hashAlgorithm = [Security.Cryptography.HashAlgorithm]::Create("SHA512")
         $fileAsByteArray = [io.File]::ReadAllBytes($filePath)
         $hashByteArray = $hashAlgorithm.ComputeHash($fileAsByteArray)
         $hash = -Join ($hashByteArray | ForEach-Object {"{0:x2}" -f $_})
@@ -80,31 +114,39 @@ function vcpkgGetSHA256([Parameter(Mandatory=$true)][string]$filePath)
     return $hash.ToLower()
 }
 
-function vcpkgCheckEqualFileHash(   [Parameter(Mandatory=$true)][string]$filePath,
-                                    [Parameter(Mandatory=$true)][string]$expectedHash,
-                                    [Parameter(Mandatory=$true)][string]$actualHash )
+function vcpkgCheckEqualFileHash(   [Parameter(Mandatory=$true)][string]$url,
+                                    [Parameter(Mandatory=$true)][string]$filePath,
+                                    [Parameter(Mandatory=$true)][string]$expectedHash)
 {
-    if ($expectedDownloadedFileHash -ne $downloadedFileHash)
+    $actualHash = vcpkgGetSHA512 $filePath
+    if ($expectedHash -ne $actualHash)
     {
         Write-Host ("`nFile does not have expected hash:`n" +
+        "              url: [ $url ]`n" +
         "        File path: [ $filePath ]`n" +
         "    Expected hash: [ $expectedHash ]`n" +
         "      Actual hash: [ $actualHash ]`n")
-        throw "Invalid Hash for file $filePath"
+        throw
     }
 }
 
-if (vcpkgHasModule -moduleName 'BitsTransfer')
-{
-   Import-Module BitsTransfer -Verbose:$false
-}
-
 function vcpkgDownloadFile( [Parameter(Mandatory=$true)][string]$url,
-                            [Parameter(Mandatory=$true)][string]$downloadPath)
+                            [Parameter(Mandatory=$true)][string]$downloadPath,
+                            [Parameter(Mandatory=$true)][string]$sha512)
 {
-    if (Test-Path $downloadPath)
+    if ($url -match "github")
     {
-        return
+        if ([System.Enum]::IsDefined([Net.SecurityProtocolType], "Tls12"))
+        {
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        }
+        else
+        {
+            Write-Warning "Github has dropped support for TLS versions prior to 1.2, which is not available on your system"
+            Write-Warning "Please manually download $url to $downloadPath"
+            Write-Warning "To solve this issue for future downloads, you can also install Windows Management Framework 5.1+"
+            throw "Download failed"
+        }
     }
 
     vcpkgCreateParentDirectoryIfNotExists $downloadPath
@@ -113,67 +155,91 @@ function vcpkgDownloadFile( [Parameter(Mandatory=$true)][string]$url,
     vcpkgRemoveItem $downloadPartPath
 
     $wc = New-Object System.Net.WebClient
-    $proxyAuth = !$wc.Proxy.IsBypassed($url)
-    if ($proxyAuth)
+    if (!$wc.Proxy.IsBypassed($url))
     {
         $wc.Proxy.Credentials = vcpkgGetCredentials
     }
 
-    # Some download (e.g. git from github)fail with Start-BitsTransfer
-    if (vcpkgHasCommand -commandName 'Start-BitsTransfer')
-    {
-        try
-        {
-            if ($proxyAuth)
-            {
-                $PSDefaultParameterValues.Add("Start-BitsTransfer:ProxyAuthentication","Basic")
-                $PSDefaultParameterValues.Add("Start-BitsTransfer:ProxyCredential", $wc.Proxy.Credentials)
-            }
-            Start-BitsTransfer -Source $url -Destination $downloadPartPath -ErrorAction Stop
-            Move-Item -Path $downloadPartPath -Destination $downloadPath
-            return
-        }
-        catch [System.Exception]
-        {
-            # If BITS fails for any reason, delete any potentially partially downloaded files and continue
-            vcpkgRemoveItem $downloadPartPath
-        }
-    }
-
-    Write-Verbose("Downloading $Dependency...")
     $wc.DownloadFile($url, $downloadPartPath)
+    vcpkgCheckEqualFileHash -url $url -filePath $downloadPartPath -expectedHash $sha512
     Move-Item -Path $downloadPartPath -Destination $downloadPath
 }
 
-function vcpkgExtractFile(  [Parameter(Mandatory=$true)][string]$file,
-                            [Parameter(Mandatory=$true)][string]$destinationDir,
-                            [Parameter(Mandatory=$true)][string]$outFilename)
+function vcpkgDownloadFileWithAria2(    [Parameter(Mandatory=$true)][string]$aria2exe,
+                                        [Parameter(Mandatory=$true)][string]$url,
+                                        [Parameter(Mandatory=$true)][string]$downloadPath,
+                                        [Parameter(Mandatory=$true)][string]$sha512)
 {
-    vcpkgCreateDirectoryIfNotExists $destinationDir
-    $output = "$destinationDir\$outFilename"
-    vcpkgRemoveItem $output
-    $destinationPartial = "$destinationDir\partially-extracted"
+    vcpkgCreateParentDirectoryIfNotExists $downloadPath
+    $downloadPartPath = "$downloadPath.part"
+    vcpkgRemoveItem $downloadPartPath
 
+    $parentDir = split-path -parent $downloadPath
+    $filename = split-path -leaf $downloadPath
+
+    if ((Test-Path $url) -or ($url.StartsWith("file://"))) # if is local file
+    {
+        vcpkgDownloadFile $url $downloadPath $sha512
+        return
+    }
+
+    $ec = vcpkgInvokeCommand "$aria2exe" "--dir=`"$parentDir`" --out=`"$filename.part`" $url"
+    if ($ec -ne 0)
+    {
+        Write-Host "Could not download $url"
+        throw
+    }
+
+    vcpkgCheckEqualFileHash -url $url -filePath $downloadPartPath -expectedHash $sha512
+    Move-Item -Path $downloadPartPath -Destination $downloadPath
+}
+
+function vcpkgExtractFileWith7z([Parameter(Mandatory=$true)][string]$sevenZipExe,
+                                [Parameter(Mandatory=$true)][string]$archivePath,
+                                [Parameter(Mandatory=$true)][string]$destinationDir)
+{
+    vcpkgRemoveItem $destinationDir
+    $destinationPartial = "$destinationDir.partial"
+    vcpkgRemoveItem $destinationPartial
+    vcpkgCreateDirectoryIfNotExists $destinationPartial
+    $ec = vcpkgInvokeCommand "$sevenZipExe" "x `"$archivePath`" -o`"$destinationPartial`" -y"
+    if ($ec -ne 0)
+    {
+        Write-Host "Could not extract $archivePath"
+        throw
+    }
+    Rename-Item -Path "$destinationPartial" -NewName $destinationDir -ErrorVariable renameResult
+    if ($renameResult)
+    {
+        Start-Sleep 3
+        Rename-Item -Path "$destinationPartial" -NewName $destinationDir -ErrorAction Stop
+    }
+}
+
+function vcpkgExtractZipFile(  [Parameter(Mandatory=$true)][string]$archivePath,
+                               [Parameter(Mandatory=$true)][string]$destinationDir)
+{
+    vcpkgRemoveItem $destinationDir
+    $destinationPartial = "$destinationDir.partial"
     vcpkgRemoveItem $destinationPartial
     vcpkgCreateDirectoryIfNotExists $destinationPartial
 
-    $shell = new-object -com shell.application
-    $zip = $shell.NameSpace($file)
-    $itemCount = $zip.Items().Count
 
     if (vcpkgHasCommand -commandName 'Microsoft.PowerShell.Archive\Expand-Archive')
     {
         Write-Verbose("Extracting with Microsoft.PowerShell.Archive\Expand-Archive")
-        Microsoft.PowerShell.Archive\Expand-Archive -path $file -destinationpath $destinationPartial
+        Microsoft.PowerShell.Archive\Expand-Archive -path $archivePath -destinationpath $destinationPartial
     }
     elseif (vcpkgHasCommand -commandName 'Pscx\Expand-Archive')
     {
         Write-Verbose("Extracting with Pscx\Expand-Archive")
-        Pscx\Expand-Archive -path $file -OutputPath $destinationPartial
+        Pscx\Expand-Archive -path $archivePath -OutputPath $destinationPartial
     }
     else
     {
         Write-Verbose("Extracting via shell")
+        $shell = new-object -com shell.application
+        $zip = $shell.NameSpace($(Get-Item $archivePath).fullname)
         foreach($item in $zip.items())
         {
             # Piping to Out-Null is used to block until finished
@@ -181,29 +247,83 @@ function vcpkgExtractFile(  [Parameter(Mandatory=$true)][string]$file,
         }
     }
 
-    if ($itemCount -eq 1)
-    {
-        Move-Item -Path "$destinationPartial\*" -Destination $output
-        vcpkgRemoveItem $destinationPartial
-    }
-    else
-    {
-        Move-Item -Path $destinationPartial -Destination $output
-    }
+    Rename-Item -Path "$destinationPartial" -NewName $destinationDir
 }
 
 function vcpkgInvokeCommand()
 {
     param ( [Parameter(Mandatory=$true)][string]$executable,
-                                        [string]$arguments = "",
-                                        [switch]$wait)
+                                        [string]$arguments = "")
 
     Write-Verbose "Executing: ${executable} ${arguments}"
-    $process = Start-Process -FilePath $executable -ArgumentList $arguments -PassThru
-    if ($wait)
+    $process = Start-Process -FilePath "`"$executable`"" -ArgumentList $arguments -PassThru -NoNewWindow
+    Wait-Process -InputObject $process
+    $ec = $process.ExitCode
+    Write-Verbose "Execution terminated with exit code $ec."
+    return $ec
+}
+
+function vcpkgInvokeCommandClean()
+{
+    param ( [Parameter(Mandatory=$true)][string]$executable,
+                                        [string]$arguments = "")
+
+    Write-Verbose "Clean-Executing: ${executable} ${arguments}"
+    $scriptsDir = split-path -parent $script:MyInvocation.MyCommand.Definition
+    $cleanEnvScript = "$scriptsDir\VcpkgPowershellUtils-ClearEnvironment.ps1"
+    $tripleQuotes = "`"`"`""
+    $argumentsWithEscapedQuotes = $arguments -replace "`"", $tripleQuotes
+    $command = ". $tripleQuotes$cleanEnvScript$tripleQuotes; & $tripleQuotes$executable$tripleQuotes $argumentsWithEscapedQuotes"
+    $arg = "-NoProfile", "-ExecutionPolicy Bypass", "-command $command"
+
+    $process = Start-Process -FilePath powershell.exe -ArgumentList $arg -PassThru -NoNewWindow
+    Wait-Process -InputObject $process
+    $ec = $process.ExitCode
+    Write-Verbose "Execution terminated with exit code $ec."
+    return $ec
+}
+
+function vcpkgFormatElapsedTime([TimeSpan]$ts)
+{
+    if ($ts.TotalHours -ge 1)
     {
-        Wait-Process -InputObject $process
-        $ec = $process.ExitCode
-        Write-Verbose "Execution terminated with exit code $ec."
+        return [string]::Format( "{0:N2} h", $ts.TotalHours);
     }
+
+    if ($ts.TotalMinutes -ge 1)
+    {
+        return [string]::Format( "{0:N2} min", $ts.TotalMinutes);
+    }
+
+    if ($ts.TotalSeconds -ge 1)
+    {
+        return [string]::Format( "{0:N2} s", $ts.TotalSeconds);
+    }
+
+    if ($ts.TotalMilliseconds -ge 1)
+    {
+        return [string]::Format( "{0:N2} ms", $ts.TotalMilliseconds);
+    }
+
+    throw $ts
+}
+
+function vcpkgFindFileRecursivelyUp()
+{
+    param(
+        [ValidateNotNullOrEmpty()]
+        [Parameter(Mandatory=$true)][string]$startingDir,
+        [ValidateNotNullOrEmpty()]
+        [Parameter(Mandatory=$true)][string]$filename
+    )
+
+    $currentDir = $startingDir
+
+    while (!($currentDir -eq "") -and !(Test-Path "$currentDir\$filename"))
+    {
+        Write-Verbose "Examining $currentDir for $filename"
+        $currentDir = Split-path $currentDir -Parent
+    }
+    Write-Verbose "Examining $currentDir for $filename - Found"
+    return $currentDir
 }
