@@ -12,9 +12,9 @@ include(vcpkg_common_functions)
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO ChaiScript/ChaiScript
-    REF v6.0.0
-    SHA512 612c175b9ee357512addcbe9ce0e2b9c34c40a45b5be85a3f75e2c0d391bc845996e2559c401e4899088b3e641c6c5b34af233bf2fd48d4de4531ea2815e2a96
-    HEAD_REF master
+    REF 9a670d79fc6be0446bbe5d7573ad26faf0786144
+    SHA512  e9012c5289bd017dce5f51138759b88b5f4d1e4d5ad722692673d7c0f2d70b85706d0de90f73739a382891c93e164785f80a09da67fcb6a43734670b12fe2161
+    HEAD_REF develop
 )
 
 file(COPY "${CMAKE_CURRENT_LIST_DIR}/CMakeLists.txt" DESTINATION "${SOURCE_PATH}")
@@ -29,6 +29,7 @@ vcpkg_configure_cmake(
             -DRUN_FUZZY_TESTS=Off
             -DRUN_PERFORMANCE_TESTS=Off
             -DUNIT_TEST_LIGHT=On
+            -DBUILD_IN_CPP17_MODE=On
 )
 
 vcpkg_install_cmake()
