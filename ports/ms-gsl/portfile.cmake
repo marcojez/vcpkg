@@ -4,8 +4,8 @@ include(vcpkg_common_functions)
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO Microsoft/GSL
-    REF 2fc94db3ebfb1b066edeafac1837f34d6111bff4
-    SHA512 b64e454b66570b2139e401e5ffd6042f2d977903cba54fa100246865967457900deee92bfbfa3976bdae555017c044b384a8dfa247946afccd664e2d30204ab2
+    REF 0cebbd77bfc21acbf1cc05983ad626539eeeb8e0
+    SHA512 dd278d4ae1c8b67bea7920006c4671f1277d63a0edd0d017d376b07e1e84115ca07b78b0beb6e18f5ba324d84dd63abb63236fc41d26be1cbc134a56222b7a11
     HEAD_REF master
 )
 

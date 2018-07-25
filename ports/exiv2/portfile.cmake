@@ -3,14 +3,10 @@ include(vcpkg_common_functions)
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO Exiv2/exiv2
-    REF 4bcec183d52995169653f619e50cbeadab420807
-    SHA512 812cace9303f6d0bb2b1e5833e1b5728316126b0a5cc14662b79a0eb14dd752862e79d4014748320696c65c1466b113c57f106b9fd25f2d7dd4e5a9d4a275d16
+    REF 33c0416bc8bf2c519cf546a457caa8b456c5a533
+    SHA512 002e0ba41d2f3073cd3fb1f5439164773fe97390c562eceefceff21624792a2d720aecb446e89e92966ae80de7541416bdda44cc988bb84991d90c84dc5fec6d
     HEAD_REF master
-)
-
-vcpkg_apply_patches(
-    SOURCE_PATH "${SOURCE_PATH}"
-    PATCHES "${CMAKE_CURRENT_LIST_DIR}/use-iconv.patch"
+    PATCHES "${CMAKE_CURRENT_LIST_DIR}/iconv.patch"
 )
 
 vcpkg_configure_cmake(

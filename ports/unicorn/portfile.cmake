@@ -14,8 +14,8 @@ set(VCPKG_CRT_LINKAGE "static")
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO unicorn-engine/unicorn
-    REF 2edb4b57c492d3255b4bfa9a08963657166fb311
-    SHA512 e68ef5f1abd8ad2560bdf94957e6d7a3a106fbe4f3b34d8cfc75ab2f7a754df214e5fdddd34670412fc4dd652261391bb8f5976bea2476a2997ff29bc10b81e8
+    REF 0b3cd70e67ef8cd564e86f502a411d4e98b9f752
+    SHA512 02c55c29997ac6d83daefaaf90d4484dbb491db51fbe89c111ddecc6771937ef8319f8a06fe99e258ad4f33f86283cf6ea37f430caac4cde4d715d20ee91685b
     HEAD_REF master
 )
 
