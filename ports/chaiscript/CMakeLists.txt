@@ -503,6 +503,9 @@ target_include_directories(chaiscript ${} INTERFACE
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 	$<INSTALL_INTERFACE:include>
 )
+if(NOT MULTITHREAD_SUPPORT_ENABLED)
+  target_compile_definitions(chaiscript INTERFACE CHAISCRIPT_NO_THREADS)
+endif()
 install(TARGETS chaiscript EXPORT chaiscript)
 
 # MJ: copy over package config script
