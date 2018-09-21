@@ -2,7 +2,7 @@ diff --git a/contrib/zip/src/miniz.h b/contrib/zip/src/miniz.h
 index 916fb1f..a7bc178 100644
 --- a/contrib/zip/src/miniz.h
 +++ b/contrib/zip/src/miniz.h
-@@ -4420,7 +4420,7 @@ mz_bool mz_zip_writer_add_mem_ex(mz_zip_archive *pZip, const char *pArchive_name
+@@ -4423,7 +4423,7 @@ mz_bool mz_zip_writer_add_mem_ex(mz_zip_archive *pZip, const char *pArchive_name
  #ifndef MINIZ_NO_STDIO
  mz_bool mz_zip_writer_add_file(mz_zip_archive *pZip, const char *pArchive_name, const char *pSrc_filename, const void *pComment, mz_uint16 comment_size, mz_uint level_and_flags)
  {

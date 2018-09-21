@@ -3,15 +3,14 @@ include(vcpkg_common_functions)
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO assimp/assimp
-    REF v4.1.0
-    SHA512 5f1292de873ae16c9921d1d44f2871474d74c0ddfd76cc928a7d9b3e03aa6eca4cc72af0513da20a86d09c55d48646e610fd4a4f2b05364f08ad09cf27cbc67a
+    REF 0795ebda469d37e9f39a29d761f66b7357619199
+    SHA512  2ba85c387afa8d615703a7998d6c8df461d8e0e636f773a69924a01cee510e2cf4894936f67735e32338112ab28545f204cc98e909907245ff9e3db3894b6870
     HEAD_REF master
 )
 
 vcpkg_apply_patches(
     SOURCE_PATH ${SOURCE_PATH}
     PATCHES
-        "${CMAKE_CURRENT_LIST_DIR}/dont-overwrite-prefix-path.patch"
         "${CMAKE_CURRENT_LIST_DIR}/uninitialized-variable.patch"
 )
 
