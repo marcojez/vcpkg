@@ -4,27 +4,24 @@ include(vcpkg_common_functions)
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO zaphoyd/websocketpp
-    REF 19cad9925f83d15d7487c16f0491f4741ec9f674
-    SHA512 7027975c434c38e182130da7185d3dc2e7777bf69ebfc8e4df5d9d8c66157afed1ff59217d23d1b39a05794d2692f97acb147be3592cdc92a6f322458ae42f4e
-    HEAD_REF develop
+    REF 0.8.1
+    SHA512 35e0261ed0285acf77d300768819bd380197de8acdf68223e2d7598481b9bfd69cb1653b435139771b1db6c16530c8d8cf9a887a8a6bba3fea126d0da4dbc13c
+    HEAD_REF master
+    PATCHES
+        openssl_110.patch
 )
 
-#vcpkg_apply_patches(
-#    SOURCE_PATH ${SOURCE_PATH}
-#    PATCHES
-#        ${CMAKE_CURRENT_LIST_DIR}/openssl_110.patch
-#)
-
 file(MAKE_DIRECTORY ${CURRENT_PACKAGES_DIR}/share/websocketpp)
-
-# Put the license file where vcpkg expects it
-file(COPY ${SOURCE_PATH}/COPYING DESTINATION ${CURRENT_PACKAGES_DIR}/share/websocketpp/)
-file(RENAME ${CURRENT_PACKAGES_DIR}/share/websocketpp/COPYING ${CURRENT_PACKAGES_DIR}/share/websocketpp/copyright)
 
 # Copy the header files
 file(COPY "${SOURCE_PATH}/websocketpp" DESTINATION "${CURRENT_PACKAGES_DIR}/include" FILES_MATCHING PATTERN "*.hpp")
 
 set(PACKAGE_INSTALL_INCLUDE_DIR "\${CMAKE_CURRENT_LIST_DIR}/../../include")
-set(WEBSOCKETPP_VERSION 0.7.0)
+set(WEBSOCKETPP_VERSION 0.8.1)
+set(PACKAGE_INIT "
+macro(set_and_check)
+  set(\${ARGV})
+endmacro()
+")
 configure_file(${SOURCE_PATH}/websocketpp-config.cmake.in "${CURRENT_PACKAGES_DIR}/share/websocketpp/websocketpp-config.cmake" @ONLY)
-#configure_file(${SOURCE_PATH}/websocketpp-configVersion.cmake.in "${CURRENT_PACKAGES_DIR}/share/websocketpp/websocketpp-configVersion.cmake" @ONLY)
+configure_file(${SOURCE_PATH}/COPYING ${CURRENT_PACKAGES_DIR}/share/websocketpp/copyright COPYONLY)

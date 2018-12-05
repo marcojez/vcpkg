@@ -6,22 +6,20 @@ vcpkg_from_github(
     REF 0795ebda469d37e9f39a29d761f66b7357619199
     SHA512  2ba85c387afa8d615703a7998d6c8df461d8e0e636f773a69924a01cee510e2cf4894936f67735e32338112ab28545f204cc98e909907245ff9e3db3894b6870
     HEAD_REF master
-)
-
-vcpkg_apply_patches(
-    SOURCE_PATH ${SOURCE_PATH}
     PATCHES
-        "${CMAKE_CURRENT_LIST_DIR}/uninitialized-variable.patch"
+        dont-overwrite-prefix-path.patch
+        uninitialized-variable.patch
 )
 
 file(REMOVE ${SOURCE_PATH}/cmake-modules/FindZLIB.cmake)
-file(REMOVE_RECURSE ${SOURCE_PATH}/contrib/zlib)
+file(REMOVE_RECURSE ${SOURCE_PATH}/contrib/zlib ${SOURCE_PATH}/contrib/gtest ${SOURCE_PATH}/contrib/rapidjson)
 
 set(VCPKG_C_FLAGS "${VCPKG_C_FLAGS} -D_CRT_SECURE_NO_WARNINGS")
 set(VCPKG_CXX_FLAGS "${VCPKG_CXX_FLAGS} -D_CRT_SECURE_NO_WARNINGS")
 
 vcpkg_configure_cmake(
     SOURCE_PATH ${SOURCE_PATH}
+    PREFER_NINJA
     OPTIONS -DASSIMP_BUILD_TESTS=OFF
             -DASSIMP_BUILD_ASSIMP_VIEW=OFF
             -DASSIMP_BUILD_ZLIB=OFF

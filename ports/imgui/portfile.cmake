@@ -3,8 +3,8 @@ include(vcpkg_common_functions)
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO ocornut/imgui
-    REF v1.64
-    SHA512  22bb2c0bbb85d2bb40663046cc4907c36ecdbd9a2148c241bda0ab92ef037cc60c225efb5729f2826893ffff031f6db8f4651768bc3616810218e185eac1b456
+    REF v1.66
+    SHA512  85d41e6fa2141da87b72e5c39d23fe285bea086d6dd758a5ec048a495c29bbcf0a49ee1e9f442d5db3452fd0f28d1e52a2c41b5402cbbaa3ad6612818aaea670
     HEAD_REF master
 )
 
@@ -21,5 +21,4 @@ vcpkg_install_cmake()
 vcpkg_copy_pdbs()
 vcpkg_fixup_cmake_targets(CONFIG_PATH share/imgui)
 
-file(COPY ${SOURCE_PATH}/LICENSE.txt DESTINATION ${CURRENT_PACKAGES_DIR}/share/imgui)
-file(RENAME ${CURRENT_PACKAGES_DIR}/share/imgui/LICENSE.txt ${CURRENT_PACKAGES_DIR}/share/imgui/copyright)
+configure_file(${SOURCE_PATH}/LICENSE.txt ${CURRENT_PACKAGES_DIR}/share/imgui/copyright COPYONLY)
