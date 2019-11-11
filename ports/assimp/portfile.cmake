@@ -3,13 +3,13 @@ include(vcpkg_common_functions)
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO assimp/assimp
-    REF 0795ebda469d37e9f39a29d761f66b7357619199
-    SHA512  2ba85c387afa8d615703a7998d6c8df461d8e0e636f773a69924a01cee510e2cf4894936f67735e32338112ab28545f204cc98e909907245ff9e3db3894b6870
+    REF v5.0.0
+    SHA512 0f73b6e961cd8455d6b6c8c10ed8b99485d846c96377b5d4fcc3b83f737647207c1306aa3dd51dad9654fbfa61bfe1119b34646f90288ae7ecab45efa6fa418a
     HEAD_REF master
     PATCHES
-        dont-overwrite-prefix-path.patch
         uninitialized-variable.patch
-        remove-useless-path.patch
+        fix-static-build-error.patch
+        cmake-policy.patch
 )
 
 file(REMOVE ${SOURCE_PATH}/cmake-modules/FindZLIB.cmake)
