@@ -580,7 +580,15 @@ namespace vcpkg::Build
 
         {
             auto locked_metrics = Metrics::g_metrics.lock();
-            locked_metrics->track_buildtime(spec.to_string() + ":[" + Strings::join(",", config.feature_list) + "]",
+
+            locked_metrics->track_buildtime(Hash::get_string_hash(spec.to_string(), Hash::Algorithm::Sha256) + ":[" +
+                                                Strings::join(",",
+                                                              config.feature_list,
+                                                              [](const std::string& feature) {
+                                                                  return Hash::get_string_hash(feature,
+                                                                                               Hash::Algorithm::Sha256);
+                                                              }) +
+                                                "]",
                                             buildtimeus);
             if (return_code != 0)
             {
@@ -654,7 +662,7 @@ namespace vcpkg::Build
         std::vector<AbiEntry> abi_tag_entries(dependency_abis.begin(), dependency_abis.end());
 
         // Sorted here as the order of dependency_abis is the only
-        // non-deterministicly ordered set of AbiEntries
+        // non-deterministically ordered set of AbiEntries
         Util::sort(abi_tag_entries);
 
         // If there is an unusually large number of files in the port then
