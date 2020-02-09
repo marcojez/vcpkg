@@ -11,13 +11,19 @@ vcpkg_from_github(
 )
 
 file(COPY ${CMAKE_CURRENT_LIST_DIR}/CMakeLists.txt DESTINATION ${SOURCE_PATH})
-file(COPY ${CMAKE_CURRENT_LIST_DIR}/imconfig.h DESTINATION ${SOURCE_PATH})
+file(READ ${SOURCE_PATH}/imgui.cpp IMGUICPP_CONTENT)
+string(REGEX REPLACE "\nImGuiContext\\*   GImGui = NULL" "\nthread_local ImGuiContext*   GImGui = NULL" IMGUICPP_CONTENT "${IMGUICPP_CONTENT}")
+file(WRITE ${SOURCE_PATH}/imgui.cpp "${IMGUICPP_CONTENT}")
+file(READ ${SOURCE_PATH}/imgui_internal.h IMGUIINTERNALH_CONTENT)
+string(REPLACE "extern IMGUI_API ImGuiContext* GImGui" "extern IMGUI_API thread_local ImGuiContext* GImGui" IMGUIINTERNALH_CONTENT "${IMGUIINTERNALH_CONTENT}")
+file(WRITE ${SOURCE_PATH}/imgui_internal.h "${IMGUIINTERNALH_CONTENT}")
 
 vcpkg_configure_cmake(
     SOURCE_PATH ${SOURCE_PATH}
     PREFER_NINJA
     OPTIONS_DEBUG
         -DIMGUI_SKIP_HEADERS=ON
+        -DCMAKE_CXX_STANDARD=11
 )
 
 vcpkg_install_cmake()
