@@ -219,7 +219,9 @@ fetchTool()
 selectCXX()
 {
     if [ "x$CXX" = "x" ]; then
-        if which g++-10 >/dev/null 2>&1; then
+        if which g++-11 >/dev/null 2>&1; then
+            CXX=g++-11
+        elif which g++-10 >/dev/null 2>&1; then
             CXX=g++-10
         elif which g++-9 >/dev/null 2>&1; then
             CXX=g++-9
@@ -276,8 +278,8 @@ else
 fi
 
 # Do the build
-vcpkgToolReleaseTag="2021-01-13-768d8f95c9e752603d2c5901c7a7c7fbdb08af35"
-vcpkgToolReleaseSha="99c9949637f83bf361ee23557edc889e2865c2105c45306c39c40855a3e1440e2f6fb5ec59e95176fca61eff33929462d23c7b49feb1975f24adb8ca443a98a6"
+vcpkgToolReleaseTag="2021-06-19"
+vcpkgToolReleaseSha="e9626023b5b545ac88985a0b1bec2d1784f2c5724cc23c6dacf7bf5851c1c7b34649d11192bcd20e41a6340dc6a8d557cace20016a0e121cc8975613f11343ef"
 vcpkgToolReleaseTarball="$vcpkgToolReleaseTag.tar.gz"
 vcpkgToolUrl="https://github.com/microsoft/vcpkg-tool/archive/$vcpkgToolReleaseTarball"
 baseBuildDir="$vcpkgRootDir/buildtrees/_vcpkg"
