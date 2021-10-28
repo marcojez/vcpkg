@@ -40,7 +40,7 @@ vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
     dx12-binding                IMGUI_BUILD_DX12_BINDING
     glfw-binding                IMGUI_BUILD_GLFW_BINDING
     glut-binding                IMGUI_BUILD_GLUT_BINDING
-    marmalade-binding           IMGUI_COPY_MARMALADE_BINDING
+#    marmalade-binding           IMGUI_COPY_MARMALADE_BINDING
     metal-binding               IMGUI_BUILD_METAL_BINDING
     opengl2-binding             IMGUI_BUILD_OPENGL2_BINDING
     opengl3-binding             IMGUI_BUILD_OPENGL3_BINDING
@@ -73,8 +73,8 @@ vcpkg_cmake_configure(
     OPTIONS_DEBUG
         -DIMGUI_SKIP_HEADERS=ON
         -DCMAKE_CXX_STANDARD=11
-    MAYBE_UNUSED_VARIABLES        
-        IMGUI_COPY_MARMALADE_BINDING
+#    MAYBE_UNUSED_VARIABLES        
+#        IMGUI_COPY_MARMALADE_BINDING
 )
 
 vcpkg_cmake_install()
