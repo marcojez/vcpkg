@@ -3,8 +3,8 @@ vcpkg_buildpath_length_warning(37)
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO CGAL/cgal
-    REF v5.3
-    SHA512 b4093b5f1b4802cffe5dd6a47a7382a59ed83d30bb8cafa5f3fa8daef4579c9f3caf208bc2a58b7a41cf61ed825d0e549c7c442e9f5977bd82f553b2dfe8748f
+    REF v5.4.1
+    SHA512 2ec6167d8ebf1df121f1ac372d01862f7f3acb043deea4a334e0329976306f9c9e917cdc66b355728d3f99fdb76f5491d96f10fff660716ce27bfd3793380875
     HEAD_REF master
 )
 
@@ -13,18 +13,17 @@ vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
         qt WITH_CGAL_Qt5
 )
 
-vcpkg_configure_cmake(
-    SOURCE_PATH ${SOURCE_PATH}
-    PREFER_NINJA
+vcpkg_cmake_configure(
+    SOURCE_PATH "${SOURCE_PATH}"
     OPTIONS
         -DCGAL_HEADER_ONLY=ON
         -DCGAL_INSTALL_CMAKE_DIR=share/cgal
         ${FEATURE_OPTIONS}
 )
 
-vcpkg_install_cmake()
+vcpkg_cmake_install()
 
-vcpkg_fixup_cmake_targets()
+vcpkg_cmake_config_fixup()
 
 vcpkg_copy_pdbs()
 
