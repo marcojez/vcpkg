@@ -1,10 +1,12 @@
+set(DIRECTXMESH_TAG dec2022)
+
 vcpkg_check_linkage(ONLY_STATIC_LIBRARY)
 
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO Microsoft/DirectXMesh
-    REF may2022
-    SHA512 f82ac5bf8211cb5699caf79cf2fb13eb23b4c3c8de807bc114966cc8e933b3bdb2c98940c9add74ee9ad0addb1bdf91dd16cbe2efe2db2afd96f69fd3871d556
+    REF dec2022b
+    SHA512 8e7b757b311223b6ea10fcd6ca9729a4fed51526966239da7d9c3c22f09bc50bbae80b2f8f899badbcc0bfcabc62dcd8d7a662c5881118cce97d3198c014c51e
     HEAD_REF main
 )
 
@@ -12,16 +14,19 @@ vcpkg_check_features(
     OUT_FEATURE_OPTIONS FEATURE_OPTIONS
     FEATURES
         dx12 BUILD_DX12
+        spectre ENABLE_SPECTRE_MITIGATION
 )
 
 if (VCPKG_HOST_IS_LINUX)
     message(WARNING "Build ${PORT} requires GCC version 9 or later")
 endif()
 
-if(VCPKG_TARGET_IS_UWP)
-  set(EXTRA_OPTIONS -DBUILD_TOOLS=OFF)
+set(EXTRA_OPTIONS -DBUILD_TESTING=OFF)
+
+if(VCPKG_TARGET_IS_UWP OR VCPKG_TARGET_IS_XBOX)
+  list(APPEND EXTRA_OPTIONS -DBUILD_TOOLS=OFF)
 else()
-  set(EXTRA_OPTIONS -DBUILD_TOOLS=ON)
+  list(APPEND EXTRA_OPTIONS -DBUILD_TOOLS=ON)
 endif()
 
 vcpkg_cmake_configure(
@@ -30,14 +35,14 @@ vcpkg_cmake_configure(
 )
 
 vcpkg_cmake_install()
-vcpkg_cmake_config_fixup(CONFIG_PATH share/directxmesh/cmake)
+vcpkg_cmake_config_fixup(CONFIG_PATH share/directxmesh)
 
 if((VCPKG_HOST_IS_WINDOWS) AND (VCPKG_TARGET_ARCHITECTURE MATCHES x64))
   vcpkg_download_distfile(
     MESHCONVERT_EXE
-    URLS "https://github.com/Microsoft/DirectXMesh/releases/download/may2022/meshconvert.exe"
-    FILENAME "meshconvert-may2022.exe"
-    SHA512 0fcc3728425bc9681bdc4e1fae79a0f3da638d1b43597171e6829fca85cec8e7f1aa30a51c2f9457074c0a7bb9f358da06df666b6ae054266ceb1c9c38874547
+    URLS "https://github.com/Microsoft/DirectXMesh/releases/download/${DIRECTXMESH_TAG}/meshconvert.exe"
+    FILENAME "meshconvert-${DIRECTXMESH_TAG}.exe"
+    SHA512 46b5fc3dcf58a7c03075927511de5ae4c62c09ceb22076125d3be29044d7da1cc32225a43500ed53ddf0c30d969091b705345a5eb3bb49cc07233dba988357c8
   )
 
   file(MAKE_DIRECTORY "${CURRENT_PACKAGES_DIR}/tools/directxmesh/")
@@ -46,9 +51,9 @@ if((VCPKG_HOST_IS_WINDOWS) AND (VCPKG_TARGET_ARCHITECTURE MATCHES x64))
     ${MESHCONVERT_EXE}
     DESTINATION ${CURRENT_PACKAGES_DIR}/tools/directxmesh/)
 
-  file(RENAME ${CURRENT_PACKAGES_DIR}/tools/directxmesh/meshconvert-may2022.exe ${CURRENT_PACKAGES_DIR}/tools/directxmesh/meshconvert.exe)
+  file(RENAME ${CURRENT_PACKAGES_DIR}/tools/directxmesh/meshconvert-${DIRECTXMESH_TAG}.exe ${CURRENT_PACKAGES_DIR}/tools/directxmesh/meshconvert.exe)
 
-elseif((VCPKG_TARGET_IS_WINDOWS) AND (NOT VCPKG_TARGET_IS_UWP))
+elseif(VCPKG_TARGET_IS_WINDOWS AND (NOT VCPKG_TARGET_IS_UWP) AND (NOT VCPKG_TARGET_IS_XBOX))
 
   vcpkg_copy_tools(
         TOOL_NAMES meshconvert

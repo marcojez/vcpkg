@@ -9,9 +9,14 @@ parameters:
     default: 'use default'
   - name: poolName
     type: string
+  - name: tripletPattern
+    displayName: 'Enable the triplets which contain this substring'
+    type: string
+    default: ''
 
 jobs:
 - job: x64_linux
+  condition: contains('^x64-linux$', '${{ parameters.tripletPattern }}')
   pool:
     name: ${{ parameters.poolName }}
   workspace:
@@ -67,3 +72,12 @@ jobs:
     inputs:
       PathtoPublish: scripts/list_files
       ArtifactName: 'file lists for x64-linux'
+  - task: PublishTestResults@2
+    displayName: 'Publish Test Results'
+    condition: ne(variables['XML_RESULTS_FILE'], '')
+    inputs:
+      testRunTitle: x64-linux
+      testResultsFormat: xUnit
+      testResultsFiles: $(XML_RESULTS_FILE)
+      platform: x64-linux
+      configuration: static

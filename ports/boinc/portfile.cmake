@@ -3,8 +3,8 @@ vcpkg_check_linkage(ONLY_STATIC_LIBRARY)
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO BOINC/boinc
-    REF client_release/7.20/7.20.0
-    SHA512 18e0dfa208b859399735c21ca5a07e008becfdfd384e394e307acd6a7d0e6431085f0f16fcf431ab10adbb29190b4272ecd978528a53c08781c194efee85954e
+    REF client_release/7.22/7.22.0
+    SHA512 f8c87338750605f59f5265fd0bfe2956acfca0c42ef58402df860f0eb9953467ee34286308a916e1d4ee12cbf85c05422558ccdf241ab8f26b86c966f66aec4a
     HEAD_REF master
 )
 

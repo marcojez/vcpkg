@@ -2,8 +2,8 @@ if (EXISTS "${CURRENT_INSTALLED_DIR}/include/mysql/mysql.h")
     message(FATAL_ERROR "FATAL ERROR: ${PORT} and libmariadb are incompatible.")
 endif()
 
-if (VCPKG_TARGET_IS_LINUX)
-    message(WARNING "${PORT} needs ncurses on LINUX, please install ncurses first.\nOn Debian/Ubuntu, package name is libncurses5-dev, on Redhat and derivates it is ncurses-devel.")
+if(NOT VCPKG_TARGET_IS_WINDOWS)
+    message(WARNING "'autoconf-archive' must be installed via your system package manager (brew, apt, etc.).")
 endif()
 
 vcpkg_from_github(
@@ -19,16 +19,18 @@ vcpkg_from_github(
         export-cmake-targets.patch
         004-added-limits-include.patch
         openssl.patch
+        Add-target-include-directories.patch
 )
 
 file(REMOVE_RECURSE "${SOURCE_PATH}/include/boost_1_70_0")
 
-set(STACK_DIRECTION)
+set(STACK_DIRECTION "")
 if(VCPKG_TARGET_ARCHITECTURE STREQUAL "x86" OR VCPKG_TARGET_ARCHITECTURE STREQUAL "x64")
     set(STACK_DIRECTION -DSTACK_DIRECTION=-1)
 endif()
 
 #Skip the version check for Visual Studio
+set(FORCE_UNSUPPORTED_COMPILER "")
 if(VCPKG_TARGET_IS_WINDOWS)
     set(FORCE_UNSUPPORTED_COMPILER 1)
 endif()
@@ -64,6 +66,10 @@ vcpkg_cmake_configure(
         -DFORCE_UNSUPPORTED_COMPILER=${FORCE_UNSUPPORTED_COMPILER}
         -DINSTALL_STATIC_LIBRARIES=${BUILD_STATIC_LIBS}
         -DLINK_STATIC_RUNTIME_LIBRARIES=${STATIC_CRT_LINKAGE}
+    MAYBE_UNUSED_VARIABLES
+        BUNDLE_RUNTIME_LIBRARIES # only on windows
+        LINK_STATIC_RUNTIME_LIBRARIES # only on windows
+        WIX_DIR # only on windows
 )
 
 vcpkg_cmake_install(ADD_BIN_TO_PATH)
@@ -101,11 +107,14 @@ endif()
 vcpkg_copy_tools(TOOL_NAMES ${MYSQL_TOOLS} AUTO_CLEAN)
 
 file(RENAME "${CURRENT_PACKAGES_DIR}/share" "${CURRENT_PACKAGES_DIR}/${PORT}")
-file(RENAME "${CURRENT_PACKAGES_DIR}/debug/share" "${CURRENT_PACKAGES_DIR}/debug/${PORT}")
 file(MAKE_DIRECTORY "${CURRENT_PACKAGES_DIR}/share")
-file(MAKE_DIRECTORY "${CURRENT_PACKAGES_DIR}/debug/share")
 file(RENAME "${CURRENT_PACKAGES_DIR}/${PORT}" "${CURRENT_PACKAGES_DIR}/share/${PORT}")
-file(RENAME "${CURRENT_PACKAGES_DIR}/debug/${PORT}" "${CURRENT_PACKAGES_DIR}/debug/share/${PORT}")
+
+if(NOT VCPKG_BUILD_TYPE)
+    file(RENAME "${CURRENT_PACKAGES_DIR}/debug/share" "${CURRENT_PACKAGES_DIR}/debug/${PORT}")
+    file(MAKE_DIRECTORY "${CURRENT_PACKAGES_DIR}/debug/share")
+    file(RENAME "${CURRENT_PACKAGES_DIR}/debug/${PORT}" "${CURRENT_PACKAGES_DIR}/debug/share/${PORT}")
+endif()
 
 vcpkg_cmake_config_fixup(PACKAGE_NAME unofficial-libmysql CONFIG_PATH share/${PORT}/unofficial-libmysql)
 

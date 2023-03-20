@@ -1,38 +1,22 @@
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO FluidSynth/fluidsynth
-    REF 8b00644751578ba67b709a827cbe5133d849d339 #v2.2.6
-    SHA512 37361c6fdbb54eba78e59f03c9ca702129f0fb522721dfb4e744fdc9a8721e665728fa5606bc68c2fb2ce971b4829cfc472f0a7cd72ce3fe14b3a335b098f7ec
+    REF "v${VERSION}"
+    SHA512 1633294bf6c714361c381151b62d9dd2c8f388490153e7964bfa14fd647a681db9ebfe1de0a06279972d6c5b30377f67361feb4db186b1faa235600f0ae02b22
     HEAD_REF master
     PATCHES
-        fix-dependencies.patch
-        separate-gentables.patch
+        gentables.patch
+        add-usage-requirements.patch
 )
-
-if ("buildtools" IN_LIST FEATURES)
-    vcpkg_cmake_configure(
-        SOURCE_PATH "${SOURCE_PATH}/src/gentables"
-        LOGFILE_BASE configure-tools
-    )
-
-    vcpkg_cmake_build(
-        LOGFILE_BASE install-tools
-        TARGET install
-    )
-
-    vcpkg_copy_tools(TOOL_NAMES make_tables AUTO_CLEAN)
-
-    vcpkg_add_to_path(APPEND "${CURRENT_PACKAGES_DIR}/tools/${PORT}")
-endif()
 
 vcpkg_check_features(
     OUT_FEATURE_OPTIONS FEATURE_OPTIONS
     FEATURES
+        buildtools  VCPKG_BUILD_MAKE_TABLES
         sndfile     enable-libsndfile
 )
 
-set(feature_list dbus jack libinstpatch midishare opensles oboe oss sdl2 pulseaudio readline lash systemd dart)
-vcpkg_list(SET FEATURE_OPTIONS)
+set(feature_list dbus jack libinstpatch midishare opensles oboe openmp oss sdl2 pulseaudio readline lash systemd dart)
 foreach(_feature IN LISTS feature_list)
     list(APPEND FEATURE_OPTIONS -Denable-${_feature}:BOOL=OFF)
 endforeach()
@@ -54,38 +38,44 @@ list(APPEND FEATURE_OPTIONS -DCOREMIDI_FOUND=${VCPKG_TARGET_IS_OSX})
 list(APPEND FEATURE_OPTIONS -Denable-alsa=${VCPKG_TARGET_IS_LINUX})
 list(APPEND FEATURE_OPTIONS -DALSA_FOUND=${VCPKG_TARGET_IS_LINUX})
 
-vcpkg_add_to_path("${CURRENT_HOST_INSTALLED_DIR}/tools/${PORT}")
-
 vcpkg_find_acquire_program(PKGCONFIG)
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
     OPTIONS
+        "-DVCPKG_HOST_TRIPLET=${HOST_TRIPLET}"
         ${FEATURE_OPTIONS}
         -DPKG_CONFIG_EXECUTABLE=${PKGCONFIG}
-        -DLIB_INSTALL_DIR=lib
-        -Denable-pkgconfig=ON
         -Denable-framework=OFF # Needs system permission to install framework
-    OPTIONS_DEBUG
-        -Denable-debug:BOOL=ON
     MAYBE_UNUSED_VARIABLES
         enable-coreaudio
         enable-coremidi
         enable-dart
+        ALSA_FOUND
+        COREAUDIO_FOUND
+        COREMIDI_FOUND
+        VCPKG_BUILD_MAKE_TABLES
+        enable-framework
 )
 
 vcpkg_cmake_install()
+
+vcpkg_cmake_config_fixup(CONFIG_PATH lib/cmake/fluidsynth)
+
 vcpkg_fixup_pkgconfig()
 
-# Copy fluidsynth.exe to tools dir
-vcpkg_copy_tools(TOOL_NAMES fluidsynth AUTO_CLEAN)
-
-# Remove unnecessary files
-file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include")
-file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/share")
-
-if(VCPKG_LIBRARY_LINKAGE STREQUAL static)
-    file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/bin" "${CURRENT_PACKAGES_DIR}/debug/bin")
+set(tools fluidsynth)
+if("buildtools" IN_LIST FEATURES)
+    list(APPEND tools make_tables)
 endif()
+vcpkg_copy_tools(TOOL_NAMES ${tools} AUTO_CLEAN)
 
-# Handle copyright
-file(INSTALL "${SOURCE_PATH}/LICENSE" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}" RENAME copyright)
+vcpkg_copy_pdbs()
+
+file(REMOVE_RECURSE
+    "${CURRENT_PACKAGES_DIR}/debug/include"
+    "${CURRENT_PACKAGES_DIR}/debug/share"
+    "${CURRENT_PACKAGES_DIR}/share/man")
+
+vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE")
+
+file(INSTALL "${CMAKE_CURRENT_LIST_DIR}/usage" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}")

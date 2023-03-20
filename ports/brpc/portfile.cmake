@@ -1,8 +1,8 @@
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO apache/incubator-brpc
-    REF 06247c18ed6307613f04c0d2357cb91d0c14131b
-    SHA512 f31b1ce3bd99dd585686ec540c9713d5d5936b2d58aadfb3f0ef48faeaab1797f2373e14b73578c2f9f8355d1e9d03661e2ed9ed8c4349b4e43e510d2214b5ae
+    REF "${VERSION}"
+    SHA512 7e75a4f03eddbd6ce841566bad415e34706a6d5db1abaffec3b512461a45ddbaee2b365589f505b64a11f9466e2a38e9eb83570fe1532caeae20dc1d059d29be
     HEAD_REF master
     PATCHES
         fix-build.patch
@@ -11,6 +11,7 @@ vcpkg_from_github(
 
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
+    DISABLE_PARALLEL_CONFIGURE
     OPTIONS
         -DWITH_THRIFT=ON
         -DWITH_MESALINK=OFF

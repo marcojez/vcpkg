@@ -28,6 +28,8 @@ target_sources(
         ${CMAKE_CURRENT_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp
 )
 
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_11)
+
 if(IMGUI_BUILD_ALLEGRO5_BINDING)
     find_path(ALLEGRO5_INCLUDE_DIRS allegro5/allegro.h)
     target_include_directories(${PROJECT_NAME} PRIVATE ${ALLEGRO5_INCLUDE_DIRS})
@@ -82,7 +84,7 @@ endif()
 if(IMGUI_BUILD_SDL2_BINDING)
     find_package(SDL2 CONFIG REQUIRED)
     target_link_libraries(${PROJECT_NAME} PUBLIC SDL2::SDL2)
-    target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/backends/imgui_impl_sdl.cpp)
+    target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/backends/imgui_impl_sdl2.cpp)
 endif()
 
 if(IMGUI_BUILD_SDL2_RENDERER_BINDING)
@@ -195,7 +197,7 @@ if(NOT IMGUI_SKIP_HEADERS)
     endif()
 
     if(IMGUI_BUILD_SDL2_BINDING)
-        install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/backends/imgui_impl_sdl.h DESTINATION include)
+        install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/backends/imgui_impl_sdl2.h DESTINATION include)
     endif()
 
     if(IMGUI_BUILD_SDL2_RENDERER_BINDING)

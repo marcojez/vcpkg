@@ -1,9 +1,11 @@
+vcpkg_minimum_required(VERSION 2022-10-12) # for ${VERSION}
+
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO Microsoft/DirectX-Headers
-    REF v1.602.0
-    SHA512 75d81191e3e0b60bc901f04fcb9cf53f0faae7f0c196a1b04f2b9199c72243d4dddaeacad29d82ca7ccb209b16d07b4f1b71a58368fccad13c4d8421e0c9f0d9
-    HEAD_REF master
+    REF v1.608.2b
+    SHA512 d4e82615751d9ee46c456c676bfd6831c47d159ee58634531fc1acd09927f00c4e8d379cb233a1f89e3489a6a30d8edc0552b76945071badaed6a9c8591cbb0c
+    HEAD_REF main
 )
 
 vcpkg_cmake_configure(
