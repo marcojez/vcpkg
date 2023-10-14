@@ -1,8 +1,8 @@
 vcpkg_from_git(
     OUT_SOURCE_PATH SOURCE_PATH
     URL git://git.kernel.org/pub/scm/libs/libgpiod/libgpiod.git
-    REF dfc5d361e6748d5f48b706e5c4ac949d133b5470 # v1.6.3
-    PATCHES
+    FETCH_REF "v${VERSION}"
+    REF d350f67ffd52e948ac81280d87b51b715d95044c
 )
 
 if (VCPKG_LIBRARY_LINKAGE STREQUAL dynamic)

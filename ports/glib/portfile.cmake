@@ -2,7 +2,7 @@ string(REGEX MATCH "^([0-9]*[.][0-9]*)" GLIB_MAJOR_MINOR "${VERSION}")
 vcpkg_download_distfile(GLIB_ARCHIVE
     URLS "https://download.gnome.org/sources/glib/${GLIB_MAJOR_MINOR}/glib-${VERSION}.tar.xz"
     FILENAME "glib-${VERSION}.tar.xz"
-    SHA512 812834ca6d840dd9c15c0689685d8bd96f4acd69a89213f807a75732d1aa5efadbed0e0073f05a56a09beb2d4f0be1b83a4642259682aac84302632da2d62370
+    SHA512 3d06890002f4b13f831c83fbb70cfce529f9750e30888619e4d6277116be15d106379a03143412cf4b2a289c0cbdbbc299ecf17284fbffc06c791ecf7556c765
 )
 
 vcpkg_extract_source_archive(SOURCE_PATH
@@ -10,7 +10,12 @@ vcpkg_extract_source_archive(SOURCE_PATH
     PATCHES
         use-libiconv-on-windows.patch
         libintl.patch
+        suppress-libelf-dependency.patch
 )
+
+if(APPLE)
+    list(APPEND VCPKG_CMAKE_CONFIGURE_OPTIONS "-DVCPKG_ENABLE_OBJC=1")
+endif()
 
 vcpkg_list(SET OPTIONS)
 if (selinux IN_LIST FEATURES)
@@ -37,6 +42,7 @@ endif()
 
 vcpkg_configure_meson(
     SOURCE_PATH "${SOURCE_PATH}"
+    LANGUAGES C CXX OBJC OBJCXX
     ADDITIONAL_BINARIES
         ${ADDITIONAL_BINARIES}
     OPTIONS
