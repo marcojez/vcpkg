@@ -9,17 +9,18 @@ vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO facebook/folly
     REF "v${VERSION}"
-    SHA512 61e9f011544314f330feea61d90771a06438ee2358023540d6f0658180491c09a9df4d2d4bb10375fe97467e9e233d1d1f8004b2df8e9c6281417a9b913e6ac6
+    SHA512 3b01982a34aaa801d3f95345c9b83e7e2969acbf742c971d4ffba6e5177e2843b080c6a362814724ecfe69c86529f3a52e24c761c4a0a49ce1ab3802a26bcb64
     HEAD_REF main
     PATCHES
-        disable-non-underscore-posix-names.patch
         fix-windows-minmax.patch
         fix-deps.patch
         disable-uninitialized-resize-on-new-stl.patch
         fix-unistd-include.patch
-        fix-fmt-patch-for-old-cmake.patch
+        fix-libunwind.patch
+        fix-absolute-dir.patch
 )
 
+file(REMOVE "${SOURCE_PATH}/CMake/FindFastFloat.cmake")
 file(REMOVE "${SOURCE_PATH}/CMake/FindFmt.cmake")
 file(REMOVE "${SOURCE_PATH}/CMake/FindLibsodium.cmake")
 file(REMOVE "${SOURCE_PATH}/CMake/FindZstd.cmake")
@@ -30,7 +31,6 @@ file(REMOVE "${SOURCE_PATH}/build/fbcode_builder/CMake/FindGMock.cmake")
 file(REMOVE "${SOURCE_PATH}/build/fbcode_builder/CMake/FindGflags.cmake")
 file(REMOVE "${SOURCE_PATH}/build/fbcode_builder/CMake/FindGlog.cmake")
 file(REMOVE "${SOURCE_PATH}/build/fbcode_builder/CMake/FindLibEvent.cmake")
-file(REMOVE "${SOURCE_PATH}/build/fbcode_builder/CMake/FindLibUnwind.cmake")
 file(REMOVE "${SOURCE_PATH}/build/fbcode_builder/CMake/FindSodium.cmake")
 file(REMOVE "${SOURCE_PATH}/build/fbcode_builder/CMake/FindZstd.cmake")
 
@@ -42,12 +42,10 @@ endif()
 
 vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
     FEATURES
-        "zlib"       CMAKE_REQUIRE_FIND_PACKAGE_ZLIB
         "liburing"   WITH_liburing
         "libaio"     WITH_libaio
     INVERTED_FEATURES
         "bzip2"      CMAKE_DISABLE_FIND_PACKAGE_BZip2
-        "lzma"       CMAKE_DISABLE_FIND_PACKAGE_LibLZMA
         "lz4"        CMAKE_DISABLE_FIND_PACKAGE_LZ4
         "zstd"       CMAKE_DISABLE_FIND_PACKAGE_Zstd
         "snappy"     CMAKE_DISABLE_FIND_PACKAGE_Snappy
@@ -61,6 +59,7 @@ vcpkg_cmake_configure(
         -DCMAKE_DISABLE_FIND_PACKAGE_LibDwarf=ON
         -DCMAKE_DISABLE_FIND_PACKAGE_Libiberty=ON
         -DCMAKE_INSTALL_DIR=share/folly
+        -DCMAKE_REQUIRE_FIND_PACKAGE_ZLIB=ON
         ${FEATURE_OPTIONS}
     MAYBE_UNUSED_VARIABLES
         MSVC_USE_STATIC_RUNTIME
